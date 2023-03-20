@@ -182,32 +182,29 @@ app.post("/api/verifyFace", upload, (req, res) => {
     return rows[0].photoUrl;
   });
 
-  download(profileUrl)
-    .then(() => {
-      verifyFace()
-        .then((data) => {
-          if (data[0] == 49) {
-            return res.status(200).json({
-              message: "Face Verified Successfully!",
-            });
-          } else {
-            return res.status(400).json({
-              message: "Face Verification Failed!",
-            });
-          }
-        })
-        .catch((err) => {
-          return res.status(400).json({
-            message: err,
+  profileUrl.split(",").forEach((url) => {
+    download(url)
+      .then(() => {
+        verifyFace()
+          .then((data) => {
+            console.log(data);
+            if (data[0] == 49) {
+              return res.status(200).json({
+                message: "Face Verified Successfully!",
+              });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
           });
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      return res.status(400).json({
-        message: err,
+      })
+      .catch((err) => {
+        console.log(err);
       });
-    });
+  });
+  return res.status(400).json({
+    message: err,
+  });
 });
 
 app.post("/api/createAttendance", (req, res) => {
