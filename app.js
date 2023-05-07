@@ -19,7 +19,6 @@ app.use(cors());
 
 // student
 app.post("/api/registration/student", myLogger, (req, res) => {
-  console.log(req);
   const { name, email, password, cpassword, rollNo, department, batch, phoneNumber, currentYear, division, photoUrl } = req.body;
   if (password != cpassword) {
     return res.status(400).json({
@@ -82,38 +81,42 @@ app.post("/api/verifyFace", myLogger, (req, res) => {
       url: faceUrl,
       dest: "/Users/ashishsah/Documents/project/smart-application-server/images/image1.jpeg",
     })
-    .then(() => {
-      download
-        .image({
-          url: profileUrl,
-          dest: "/Users/ashishsah/Documents/project/smart-application-server/images/image2.jpeg",
-        })
-        .then(() => {
-          verifyFace()
-            .then((data) => {
-              if (data[0] == 49) {
+    .then(async () => {
+      const listOfUrls = profileUrl
+        .trim()
+        .split(" ")
+        .filter((url) => url !== undefined || url !== "" || url.length !== 0);
+      let isFirstfaceVerified = false;
+      for (let i = 0; i < listOfUrls.length; i++) {
+        const url = listOfUrls[i];
+        try {
+          await download.image({
+            url: url,
+            dest: "/Users/ashishsah/Documents/project/smart-application-server/images/image2.jpeg",
+          });
+          try {
+            const data = await verifyFace();
+            if (data[0] == 49) {
+              if (isFirstfaceVerified) {
+                isFirstfaceVerified = true;
+              } else {
                 return res.status(200).json({
                   message: "Face Verified Successfully!",
                 });
-              } else {
-                return res.status(400).json({
-                  message: "Face Verification Failed!",
-                });
               }
-            })
-            .catch((err) => {
-              console.log(err);
-              return res.status(400).json({
-                message: err,
-              });
-            });
-        })
-        .catch((err) => {
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        } catch (err) {
           console.log(err);
+        }
+        if (i == listOfUrls.length - 1) {
           return res.status(400).json({
-            message: err,
+            message: "Face Verification Failed!",
           });
-        });
+        }
+      }
     })
     .catch((err) => {
       console.log(err);
@@ -275,9 +278,9 @@ app.post("/api/login/teacher", myLogger, (req, res) => {
 });
 
 app.post("/api/createAttendance", myLogger, (req, res) => {
-  const { classYear, classDivision, classDept, classSubject, startTime, duration, teacherId, latitude = 18.4682959, longitude = 73.8364566, classBatch } = req.body;
-  const createAttendance = `INSERT INTO Attendance (classYear, classDivision, classDept, classSubject, startTime, duration, teacherId, isCompleted, classBatch) VALUES (?,?,?,?,?,?,?,?,?)`;
-  db.run(createAttendance, [classYear, classDivision, classDept, classSubject, startTime, duration, teacherId, 0, classBatch], (err, rows) => {
+  const { classYear, classDivision, classDept, classSubject, startTime, duration, teacherId, latitude = 18.4682959, longitude = 73.8364566 } = req.body;
+  const createAttendance = `INSERT INTO Attendance (classYear, classDivision, classDept, classSubject, startTime, duration, teacherId, isCompleted) VALUES (?,?,?,?,?,?,?,?)`;
+  db.run(createAttendance, [classYear, classDivision, classDept, classSubject, startTime, duration, teacherId, 0], (err, rows) => {
     if (err) {
       console.log(err);
       return res.status(400).json({

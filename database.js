@@ -35,7 +35,8 @@ export function createTable(db) {
         startTime INTEGER NOT NULL,
         students TEXT,
         duration INTEGER NOT NULL,
-        isCompletedd INTEGER DEFAULT 0,
+        isCompleted INTEGER DEFAULT 0,
+        classDivision TEXT NOT NULL,
         teacherId INTEGER REFERENCES Teacher(teacherId),
         UNIQUE (attendanceId, classYear, classDept, classSubject, startTime, duration) ON CONFLICT REPLACE
     )`;

@@ -31,3 +31,10 @@ export const myLogger = function (req, res, next) {
   console.log(req);
   next();
 };
+
+export function download(url, path) {
+  download.image({
+    url: url,
+    dest: path,
+  });
+}
