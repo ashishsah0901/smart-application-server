@@ -33,7 +33,7 @@ image2 = image2.unsqueeze(0)
 output1,output2 = model(image1.to(DEVICE),image2.to(DEVICE))
 euclidean_distance = F.pairwise_distance(output1, output2)
 # print(euclidean_distance.item())
-if euclidean_distance.item() < 2:
+if euclidean_distance.item() < 3:
     print(1)
 else :
     print(0)
