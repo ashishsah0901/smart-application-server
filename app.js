@@ -224,7 +224,7 @@ app.get(
   myLogger,
   (req, res) => {
     const { classDept, currentYear, classDivision } = url.parse(req.url, true).query;
-    db.all(`SELECT * FROM Attendance WHERE classDept = ? AND classYear = ? AND classDivision = ? AND isComplete = ?`, [classDept, currentYear, classDivision, 0], (err, rows) => {
+    db.all(`SELECT * FROM Attendance WHERE classDept = ? AND classYear = ? AND classDivision = ? AND isCompleted = ?`, [classDept, currentYear, classDivision, 0], (err, rows) => {
       if (err) {
         console.log(err);
         return res.status(400).json({
@@ -243,25 +243,32 @@ app.get(
   "/api/attendanceCount",
   myLogger,
   (req, res) => {
-    const { studentId } = url.parse(req.url, true).query;
-    db.all(`SELECT * FROM Student WHERE studentId = ?`, [studentId], (err, rows) => {
-      if (err || rows.length === 0) {
+    const { studentId, allData = false } = url.parse(req.url, true).query;
+    db.all(`SELECT * FROM Student WHERE studentId = ?`, [studentId], (err, outerRows) => {
+      if (err || outerRows.length === 0) {
         console.log(err);
         return res.status(400).json({
           message: err ? err.message : "Invalid Request",
         });
       }
-      const student = rows[0];
-      db.all(`SELECT * FROM Attendance WHERE classDept = ? AND classDivision = ? AND classYear = ?`, [student.department, student.division, student.currentTime], (err, rows) => {
+      const student = outerRows[0];
+      db.all(`SELECT * FROM Attendance WHERE classDept = ? AND classDivision = ? AND classYear = ?`, [student.department, student.division, student.currentYear], (err, innerRows) => {
         if (err) {
           console.log(err);
           return res.status(400).json({
             message: err.message,
           });
         }
-        const presentAttendance = rows?.filter((row) => row?.students?.split(",")?.includes("" + student.id));
+        console.log(innerRows);
+        const presentAttendance = innerRows?.filter((row) => row.students?.split(",")?.includes("" + studentId));
+        if (allData) {
+          return res.status(200).json({
+            allAttendance: innerRows,
+            presentAttendance: presentAttendance,
+          });
+        }
         return res.status(200).json({
-          allAttendance: rows.length,
+          allAttendance: innerRows.length,
           presentAttendance: presentAttendance ? presentAttendance.length : 0,
         });
       });
